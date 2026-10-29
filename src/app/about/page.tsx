@@ -1,4 +1,6 @@
-import { ArrowRight, BadgeCheck, FileText, KeyRound, MapPin, Phone, ShieldCheck, Tag } from "lucide-react";
+import { faArrowRight, faCar, faCircleCheck, faFileLines, faKey, faLocationDot, faPhone, faShieldHalved, faTag, faThumbsUp, faMobileScreenButton, type IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faInstagram } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import { PlainText } from "@/components/ui/PlainText";
 import { Reveal } from "@/components/ui/Reveal";
@@ -14,11 +16,11 @@ export async function generateMetadata() {
   return pageMetadata(s, { title: "About", path: "/about", description: `${s.brandName} buys and sells pre-owned cars in ${CONTACT_PLACE}, with RC transfer and insurance support.` });
 }
 
-const SERVICES = [
-  { icon: KeyRound, title: "Buy used cars", text: "Browse the cars we have listed, with the owner count, kilometres, fuel and condition notes written out for each one." },
-  { icon: Tag, title: "Sell your car", text: "Looking to sell? Message us with your car's details and we'll get back to you." },
-  { icon: FileText, title: "RC transfer support", text: "We help with the name transfer paperwork so the car is moved into your name." },
-  { icon: ShieldCheck, title: "Insurance & FC support", text: "Insurance and FC (fitness certificate) details are mentioned on our listings, and we help with renewals." },
+const SERVICES: Array<{ icon: IconDefinition; title: string; text: string }> = [
+  { icon: faKey, title: "Buy used cars", text: "Browse the cars we have listed, with the owner count, kilometres, fuel and condition notes written out for each one." },
+  { icon: faTag, title: "Sell your car", text: "Looking to sell? Message us with your car's details and we'll get back to you." },
+  { icon: faFileLines, title: "RC transfer support", text: "We help with the name transfer paperwork so the car is moved into your name." },
+  { icon: faShieldHalved, title: "Insurance & FC support", text: "Insurance and FC (fitness certificate) details are mentioned on our listings, and we help with renewals." },
 ];
 
 const PROMISES = [
@@ -44,7 +46,7 @@ export default async function About() {
           <ul className="mt-5 grid gap-4 sm:grid-cols-2">
             {SERVICES.map(({ icon: Icon, title, text }) => (
               <li key={title} className="card p-6">
-                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-accent-fg"><Icon size={22} aria-hidden /></span>
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-accent-fg"><FontAwesomeIcon icon={Icon} className="h-5 w-5" aria-hidden /></span>
                 <h3 className="mt-4 text-lg font-bold">{title}</h3>
                 <p className="mt-1.5 text-muted">{text}</p>
               </li>
@@ -59,7 +61,7 @@ export default async function About() {
           <ul className="mt-5 grid gap-4 md:grid-cols-3">
             {PROMISES.map(([t, d]) => (
               <li key={t} className="rounded-3xl bg-surface-2 p-6">
-                <BadgeCheck className="text-accent-ink" size={26} aria-hidden />
+                <FontAwesomeIcon icon={faCircleCheck} className="h-6 w-6 text-accent-ink" aria-hidden />
                 <h3 className="mt-3 text-lg font-bold">{t}</h3>
                 <p className="mt-1.5 text-sm text-muted">{d}</p>
               </li>
@@ -73,27 +75,30 @@ export default async function About() {
           <div className="card p-6 sm:p-8">
             <h2 id="find" className="display text-2xl sm:text-3xl">Find us</h2>
             <ul className="mt-5 grid gap-3 text-lg">
-              <li className="flex items-center gap-3"><MapPin size={20} className="text-accent-ink" aria-hidden />{CONTACT_PLACE}</li>
-              <li className="flex items-center gap-3"><Phone size={20} className="text-accent-ink" aria-hidden /><a className="font-semibold underline-offset-4 hover:underline" href={`tel:${CONTACT_TEL}`}>{CONTACT_PHONE}</a></li>
+              <li className="flex items-center gap-3"><FontAwesomeIcon icon={faLocationDot} className="h-5 w-5 text-accent-ink" aria-hidden />{CONTACT_PLACE}</li>
+              <li className="flex items-center gap-3"><FontAwesomeIcon icon={faPhone} className="h-5 w-5 text-accent-ink" aria-hidden /><a className="font-semibold underline-offset-4 hover:underline" href={`tel:${CONTACT_TEL}`}>{CONTACT_PHONE}</a></li>
             </ul>
             <div className="mt-6 flex flex-wrap gap-3">
-              <a className="btn btn-primary" href={`tel:${CONTACT_TEL}`}><Phone size={16} aria-hidden /> Call us</a>
+              <a className="btn btn-primary" href={`tel:${CONTACT_TEL}`}><FontAwesomeIcon icon={faPhone} className="h-4 w-4" aria-hidden /> Call us</a>
               <WhatsappButton number={wa} message={GENERAL_MESSAGE} />
-              <a className="btn" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a>
+              <a className="btn" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"><FontAwesomeIcon icon={faInstagram} className="h-4 w-4" aria-hidden /> Instagram</a>
             </div>
           </div>
-          {s.about && (
-            <div className="rounded-3xl bg-fg p-6 text-bg sm:p-8">
-              <h2 className="display text-2xl">At a glance</h2>
-              <div className="mt-4 [&_p]:mb-0 [&_p]:leading-8"><PlainText text={s.about} /></div>
-            </div>
-          )}
+          <div className="rounded-3xl bg-fg p-6 text-bg sm:p-8">
+            <h2 className="display text-2xl">At a glance</h2>
+            <ul className="mt-4 grid gap-3 text-base">
+              {([[faCar, "Buy & Sell Used Cars"], [faThumbsUp, "Quality Cars | Best Price"], [faFileLines, "RC Transfer & Insurance Support"], [faLocationDot, CONTACT_PLACE], [faMobileScreenButton, `Contact ${CONTACT_PHONE}`]] as Array<[IconDefinition, string]>).map(([icon, text]) => (
+                <li key={text} className="flex items-center gap-3"><FontAwesomeIcon icon={icon} className="h-5 w-5 shrink-0 text-accent" aria-hidden />{text}</li>
+              ))}
+            </ul>
+            {s.about && <div className="mt-5 border-t border-white/15 pt-4 text-sm opacity-90"><PlainText text={s.about} /></div>}
+          </div>
         </section>
       </Reveal>
 
       <div className="mt-14 flex flex-col items-start justify-between gap-5 rounded-[28px] bg-accent p-8 text-accent-fg sm:flex-row sm:items-center sm:p-10">
         <h2 className="display text-2xl sm:text-3xl">Ready to find your next car?</h2>
-        <Link href="/#available" className="btn">See available cars <ArrowRight size={16} aria-hidden /></Link>
+        <Link href="/#available" className="btn">See available cars <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" aria-hidden /></Link>
       </div>
     </main>
   );

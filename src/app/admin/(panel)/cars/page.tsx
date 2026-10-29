@@ -41,7 +41,7 @@ export default async function AdminCars({ searchParams }: { searchParams: SP }) 
                 <tr key={v.id} className="align-top">
                   <td className="flex items-center gap-3 py-3 pr-3">
                     <div className="relative h-14 w-20 shrink-0 bg-surface-2">{img && <Image src={vehicleImageUrl(img.storage_path, "thumb")} alt="" fill sizes="80px" className="object-cover" />}</div>
-                    <span className="font-semibold">{vehicleTitle(v)}{v.is_featured && <span className="ml-2 text-xs text-accent-ink">★ featured</span>}</span></td>
+                    <span className="font-semibold">{vehicleTitle(v)}{v.is_featured && <span className="ml-2 text-xs text-accent-ink">Featured</span>}</span></td>
                   <td>{formatINR(v.price_inr)}</td>
                   <td><div className="flex flex-col items-start gap-1"><StatusBadge status={v.inventory_status} /><StatusBadge status={v.publication_status} /></div></td>
                   <td>{formatDate(v.updated_at)}</td>

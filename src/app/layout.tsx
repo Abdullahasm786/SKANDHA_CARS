@@ -7,7 +7,11 @@ import { themeScript } from "@/components/theme/theme-script";
 import { siteUrl } from "@/lib/env";
 import { getSiteSettings } from "@/lib/settings";
 import { readableOn } from "@/lib/utils/colour";
+import { config } from "@fortawesome/fontawesome-svg-core";
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
+
+config.autoAddCss = false; // CSS is imported above, so icons never flash oversized
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
 
