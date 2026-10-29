@@ -1,62 +1,76 @@
-import Image from "next/image";
+import { AlertTriangle, Plus, SearchX } from "lucide-react";
 import Link from "next/link";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { StatusControls } from "@/components/admin/StatusControls";
+import { EmptyState, PageHeader } from "@/components/admin/ui";
+import { PaginationControls } from "@/components/admin/Pagination";
+import { VehicleFilters } from "@/components/admin/VehicleFilters";
+import { VehicleList, type SortHrefs } from "@/components/admin/VehicleList";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { vehicleImageUrl } from "@/lib/storage/urls";
-import { formatDate, formatINR, vehicleTitle } from "@/lib/utils/format";
-import { primaryImage } from "@/lib/vehicles/queries";
-import { ADMIN_PAGE, listAdminVehicles } from "@/lib/db/admin-repo";
+import { type AdminSort, findDuplicateGroups, listAdminVehicles, SORTS } from "@/lib/db/admin-repo";
+import { vehicleTitle } from "@/lib/utils/format";
 
-export const metadata = { title: "Inventory" };
-type SP = Promise<{ q?: string; status?: string; pub?: string; page?: string }>;
+export const metadata = { title: "All vehicles" };
+type SP = Promise<Record<string, string | undefined>>;
+const num = (v?: string) => { const n = Number(v); return v && Number.isFinite(n) && n >= 0 ? Math.floor(n) : undefined; };
 
 export default async function AdminCars({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams;
   await requireAdmin();
-  const page = Math.max(1, Number(sp.page) || 1);
-  const { rows, count } = await listAdminVehicles({ q: sp.q, status: sp.status, pub: sp.pub, page });
-  const pages = Math.max(1, Math.ceil(count / ADMIN_PAGE));
-  const qs = (p: number) => { const s = new URLSearchParams(Object.entries({ ...sp, page: String(p) }).filter(([, v]) => v) as [string, string][]); return `?${s}`; };
+  const sp = await searchParams;
+  const page = Math.max(1, num(sp.page) ?? 1);
+  const sort = (sp.sort && sp.sort in SORTS ? sp.sort : "updated") as AdminSort;
+  const dir = sp.dir === "asc" ? "asc" : "desc";
+  const view = sp.view === "grid" ? "grid" : "table";
+  const ok = (s?: string, list: string[] = []) => (s && list.includes(s) ? s : undefined);
+
+  let data, dupes;
+  let failed = false;
+  try {
+    [data, dupes] = await Promise.all([
+      listAdminVehicles({ q: sp.q, status: ok(sp.status, ["available", "reserved", "sold"]), pub: ok(sp.pub, ["draft", "published", "archived"]), make: sp.make,
+        minYear: num(sp.minYear), maxYear: num(sp.maxYear), minPrice: num(sp.minPrice), maxPrice: num(sp.maxPrice), sort, dir, page, pageSize: num(sp.size) }),
+      findDuplicateGroups(),
+    ]);
+  } catch { failed = true; }
+
+  const build = (patch: Record<string, string | undefined>) => {
+    const n = new URLSearchParams(Object.entries({ ...sp, ...patch }).filter(([, v]) => v) as [string, string][]);
+    return `/admin/cars${n.size ? `?${n}` : ""}`;
+  };
+  const sortHrefs: SortHrefs = Object.fromEntries((["year", "price", "km", "updated"] as AdminSort[]).map((k) => {
+    const cur = sort === k ? dir : null;
+    return [k, { href: build({ sort: k, dir: cur === "desc" ? "asc" : "desc", page: undefined }), dir: cur }];
+  }));
+  const titleBy = sp.status === "sold" ? "Sold cars" : sp.status === "reserved" ? "Reserved cars" : sp.status === "available" ? "Available cars" : sp.pub === "draft" ? "Drafts" : "All vehicles";
+
+  if (failed || !data) {
+    return (<><PageHeader title={titleBy} /><EmptyState Icon={AlertTriangle} title="Couldn't load vehicles" text="The database didn't respond. Check your connection and try again." action={<Link href="/admin/cars" className="btn btn-primary btn-sm">Retry</Link>} /></>);
+  }
+  const pages = Math.max(1, Math.ceil(data.count / data.pageSize));
+  const filtered = Object.keys(sp).some((k) => !["page", "view", "size", "sort", "dir"].includes(k));
 
   return (
     <div>
-      <div className="flex items-center justify-between"><h1 className="display text-4xl">Inventory</h1><Link className="btn btn-primary" href="/admin/cars/new">Add car</Link></div>
-      <form className="mt-5 grid gap-3 sm:grid-cols-4" role="search">
-        <input name="q" defaultValue={sp.q} placeholder="Search make, model…" aria-label="Search" className="field sm:col-span-2" />
-        <select name="status" defaultValue={sp.status ?? ""} aria-label="Inventory status" className="field"><option value="">Any status</option><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option></select>
-        <select name="pub" defaultValue={sp.pub ?? ""} aria-label="Publication" className="field"><option value="">Not archived</option><option value="published">Published</option><option value="draft">Draft</option><option value="archived">Archived</option></select>
-        <button className="btn sm:col-span-4 sm:w-fit">Filter</button>
-      </form>
-      <p className="mt-4 text-sm text-muted">{count} vehicles</p>
-      {rows.length === 0 ? <p className="mt-4 border border-dashed border-line p-8 text-muted">No vehicles match. <Link className="underline" href="/admin/cars/new">Add your first car</Link>.</p> : (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[820px] text-left text-sm">
-            <caption className="sr-only">Vehicles</caption>
-            <thead className="border-b border-line text-xs uppercase tracking-wider text-muted"><tr>
-              <th className="py-2 pr-3" scope="col">Car</th><th scope="col">Price</th><th scope="col">Status</th><th scope="col">Updated</th><th scope="col">Actions</th></tr></thead>
-            <tbody className="divide-y divide-line">{rows.map((v) => {
-              const img = primaryImage(v);
-              return (
-                <tr key={v.id} className="align-top">
-                  <td className="flex items-center gap-3 py-3 pr-3">
-                    <div className="relative h-14 w-20 shrink-0 bg-surface-2">{img && <Image src={vehicleImageUrl(img.storage_path, "thumb")} alt="" fill sizes="80px" className="object-cover" />}</div>
-                    <span className="font-semibold">{vehicleTitle(v)}{v.is_featured && <span className="ml-2 text-xs text-accent-ink">Featured</span>}</span></td>
-                  <td>{formatINR(v.price_inr)}</td>
-                  <td><div className="flex flex-col items-start gap-1"><StatusBadge status={v.inventory_status} /><StatusBadge status={v.publication_status} /></div></td>
-                  <td>{formatDate(v.updated_at)}</td>
-                  <td className="space-y-2">
-                    <div className="flex gap-1.5"><Link className="btn btn-sm" href={`/admin/cars/${v.id}/edit`}>Edit</Link>
-                      {v.publication_status === "published" ? <Link className="btn btn-sm" href={`/cars/${v.slug}`} target="_blank">View</Link> : null}</div>
-                    <StatusControls id={v.id} title={vehicleTitle(v)} inventory={v.inventory_status} publication={v.publication_status} />
-                  </td>
-                </tr>);
-            })}</tbody>
-          </table>
-        </div>)}
-      {pages > 1 && <nav className="mt-6 flex items-center gap-3" aria-label="Pagination">
-        {page > 1 && <Link className="btn btn-sm" href={qs(page - 1)}>Previous</Link>}<span className="text-sm text-muted">Page {page} of {pages}</span>
-        {page < pages && <Link className="btn btn-sm" href={qs(page + 1)}>Next</Link>}</nav>}
+      <PageHeader title={titleBy} description={`${data.count} ${data.count === 1 ? "vehicle" : "vehicles"}`}
+        actions={<Link href="/admin/cars/new" className="btn btn-primary"><Plus size={16} aria-hidden /> Add vehicle</Link>} />
+      {dupes && dupes.length > 0 && (
+        <details className="card mb-4 border-warn/40 p-4">
+          <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold"><AlertTriangle size={16} className="text-warn" aria-hidden /> {dupes.length} possible duplicate {dupes.length === 1 ? "entry" : "entries"} to review</summary>
+          <p className="mt-2 text-sm text-muted">These cars share the same year, kilometres and price. Nothing is merged or deleted automatically — open each one and archive or delete the extra if it is a duplicate.</p>
+          <ul className="mt-3 grid gap-3">{dupes.map((g, i) => (
+            <li key={i} className="rounded-lg bg-surface-2 p-3 text-sm"><ul className="grid gap-1">{g.map((v) => (
+              <li key={v.id} className="flex flex-wrap items-center gap-2"><Link className="font-medium underline" href={`/admin/cars/${v.id}`}>{vehicleTitle(v)}</Link><span className="text-xs text-muted">{v.inventory_status} · {v.publication_status}</span>
+                <Link className="text-xs text-accent-ink hover:underline" href={`/admin/cars/${v.id}/edit`}>Edit</Link></li>))}</ul></li>))}</ul>
+        </details>
+      )}
+      <VehicleFilters makes={data.makes} view={view} />
+      {data.rows.length === 0 ? (
+        filtered ? <EmptyState Icon={SearchX} title="No vehicles match these filters" text="Try removing a filter or searching for something else." action={<Link href="/admin/cars" className="btn btn-sm">Clear filters</Link>} />
+          : <EmptyState title="No vehicles yet" text="Add your first car to start building your inventory." action={<Link href="/admin/cars/new" className="btn btn-primary btn-sm">Add vehicle</Link>} />
+      ) : (
+        <>
+          <VehicleList rows={data.rows} view={view} sortHrefs={sortHrefs} />
+          <PaginationControls page={page} pages={pages} total={data.count} size={data.pageSize} href={(p) => build({ page: String(p) })} />
+        </>
+      )}
     </div>
   );
 }

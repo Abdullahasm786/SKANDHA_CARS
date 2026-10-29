@@ -13,6 +13,8 @@ export const settingsSchema = z.object({
   seo_description: optText(320),
   announcement: optText(200),
   about: optText(6000),
+  business_description: optText(600),
+  default_publication: z.preprocess(emptyToUndef, z.enum(["draft", "published"]).optional()),
   privacy: optText(20000),
   terms: optText(20000),
 });

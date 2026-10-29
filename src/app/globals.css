@@ -110,6 +110,38 @@ body {
 .err { font-size: 0.8rem; color: var(--danger); margin-top: 0.25rem; }
 }
 
+/* ───────── Admin workspace: its own palette (restrained automotive blue on warm canvas) ───────── */
+.admin {
+  --bg: #f5f4f0; --surface: #ffffff; --surface-2: #eeede8; --fg: #15171c; --muted: #636770;
+  --line: #e4e2da; --line-strong: #d0cdc2;
+  --accent: #2a56c6; --accent-fg: #ffffff; --accent-ink: #2a56c6;
+  --success: #166534; --success-bg: #dcf5e3; --warn: #7a4a00; --warn-bg: #fff0c2; --danger: #9b1c1c; --danger-bg: #fde4e4; --neutral-bg: #ebe9e1;
+  background: var(--bg); color: var(--fg);
+}
+:root[data-theme="dark"] .admin {
+  --bg: #0e1013; --surface: #161920; --surface-2: #1f232b; --fg: #eceef2; --muted: #9aa1ad;
+  --line: #262b33; --line-strong: #363c47;
+  --accent: #6f95ff; --accent-fg: #0b1020; --accent-ink: #93b1ff;
+  --success: #86efac; --success-bg: #12301c; --warn: #fcd34d; --warn-bg: #3a2c0a; --danger: #fca5a5; --danger-bg: #3d1414; --neutral-bg: #262a31;
+}
+@layer components {
+  .admin .btn { border-radius: 10px; min-height: 40px; font-weight: 600; font-size: .875rem; padding: 0 1rem; }
+  .admin .btn-sm { min-height: 32px; padding: 0 .7rem; font-size: .8rem; border-radius: 8px; }
+  .admin .btn:hover { transform: none; box-shadow: none; background: var(--surface-2); }
+  .admin .btn-primary:hover { background: var(--accent); filter: brightness(1.1); }
+  .admin .btn-danger:hover { background: var(--danger-bg); }
+  .admin .btn-whatsapp:hover { background: #1fa855; }
+  .admin .card { border-radius: 14px; box-shadow: 0 1px 2px rgb(16 20 30 / .04); }
+  .admin .field { border-radius: 10px; min-height: 42px; font-size: .9rem; padding: .5rem .75rem; }
+  .admin .label { font-size: .75rem; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+  .admin .chip { border-radius: 10px; min-height: 36px; font-size: .85rem; padding: 0 .85rem; }
+  .admin .display { letter-spacing: -0.02em; font-weight: 700; }
+  .admin .th { font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: .65rem .75rem; white-space: nowrap; }
+  .admin .td { padding: .7rem .75rem; vertical-align: middle; }
+}
+@keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 0, var(--line) 50%, var(--surface-2) 100%); background-size: 200px 100%; background-repeat: no-repeat; animation: shimmer 1.3s infinite linear; border-radius: 8px; }
+
 .prose-sc p { margin-bottom: 1rem; line-height: 1.7; }
 .prose-sc h2 { font-family: var(--font-display); font-size: 1.5rem; margin: 2rem 0 .75rem; font-weight: 600; }
 

@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
 import { PwaProvider } from "@/components/pwa/PwaProvider";
 import { themeScript } from "@/components/theme/theme-script";
 import { siteUrl } from "@/lib/env";
@@ -51,12 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
       </head>
       <body className="min-h-dvh antialiased">
-        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[70] focus:bg-fg focus:p-3 focus:text-bg">Skip to content</a>
-        <PwaProvider>
-          <Header settings={settings} />
-          <div id="main" tabIndex={-1}>{children}</div>
-          <Footer settings={settings} />
-        </PwaProvider>
+        <PwaProvider>{children}</PwaProvider>
       </body>
     </html>
   );

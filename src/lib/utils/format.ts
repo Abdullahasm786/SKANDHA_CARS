@@ -38,3 +38,7 @@ export function formatLakh(value: number): string {
   if (value >= 100_000) return `₹${(value / 100_000).toFixed(2).replace(/\.?0+$/, "")} lakh`;
   return formatINR(value);
 }
+
+export function formatDateTime(iso: string): string {
+  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(new Date(iso));
+}

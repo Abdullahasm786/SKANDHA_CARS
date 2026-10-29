@@ -15,7 +15,9 @@ export async function saveSettings(_prev: ActionState, fd: FormData): Promise<Ac
   if (!parsed.success) return { errors: fieldErrors(parsed.error), message: "Please fix the highlighted fields." };
   const col = (await getDb()).collection<{ _id: string; value: unknown }>("site_settings");
   const now = new Date();
-  await col.bulkWrite(Object.entries(parsed.data).map(([key, value]) => ({
+  // Only keys present in the submitted form are written, so saving one tab never blanks another tab's settings.
+  const submitted = new Set(Array.from(fd.keys()));
+  await col.bulkWrite(Object.entries(parsed.data).filter(([key]) => submitted.has(key)).map(([key, value]) => ({
     updateOne: { filter: { _id: key }, update: { $set: { value: value ?? "", updated_by: admin.id, updated_at: now } }, upsert: true },
   })) as never);
   refreshPublic();

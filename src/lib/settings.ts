@@ -14,6 +14,8 @@ export interface SiteSettings {
   seoDescription: string | null;
   announcement: string | null;
   about: string | null;
+  businessDescription: string | null;
+  defaultPublication: "draft" | "published";
   privacy: string | null;
   terms: string | null;
   logo: LogoSet | null;
@@ -22,7 +24,7 @@ export interface SiteSettings {
 export const EMPTY_SETTINGS: SiteSettings = {
   brandName: "Skandha Cars", whatsapp: null,
   accentColour: null, seoTitle: null, seoDescription: null,
-  announcement: null, about: null, privacy: null, terms: null, logo: null,
+  announcement: null, about: null, businessDescription: null, defaultPublication: "draft", privacy: null, terms: null, logo: null,
 };
 
 type Raw = Record<string, unknown>;
@@ -53,6 +55,8 @@ export function mapSettings(rows: Array<{ key: string; value: unknown }>): SiteS
     seoDescription: str(raw.seo_description),
     announcement: str(raw.announcement),
     about: str(raw.about),
+    businessDescription: str(raw.business_description),
+    defaultPublication: raw.default_publication === "published" ? "published" : "draft",
     privacy: str(raw.privacy),
     terms: str(raw.terms),
     logo,

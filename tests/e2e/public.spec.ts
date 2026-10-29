@@ -43,7 +43,7 @@ test("manifest, robots, sitemap and offline fallback", async ({ request }) => {
 });
 
 test("admin routes redirect anonymous users to login and are noindex", async ({ page, request }) => {
-  for (const path of ["/admin", "/admin/cars", "/admin/cars/new", "/admin/settings"]) {
+  for (const path of ["/admin", "/admin/cars", "/admin/cars/new", "/admin/featured", "/admin/activity", "/admin/settings"]) {
     const res = await request.get(path, { maxRedirects: 0 });
     expect(res.status()).toBe(307);
     expect(res.headers()["location"]).toContain("/admin/login");

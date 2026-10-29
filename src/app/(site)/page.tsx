@@ -9,7 +9,7 @@ import { organizationJsonLd, pageMetadata, websiteJsonLd } from "@/lib/seo/site"
 import { getSiteSettings } from "@/lib/settings";
 import { vehicleImageUrl } from "@/lib/storage/urls";
 import { formatINR } from "@/lib/utils/format";
-import { getAvailable, getSold, primaryImage } from "@/lib/vehicles/queries";
+import { getAvailable, getFeatured, getSold, primaryImage } from "@/lib/vehicles/queries";
 import { GENERAL_MESSAGE, normalizeWhatsapp } from "@/lib/whatsapp";
 
 export const revalidate = 300;
@@ -20,7 +20,8 @@ export async function generateMetadata() {
 }
 
 export default async function Home() {
-  const [settings, available, sold] = await Promise.all([getSiteSettings(), getAvailable(48), getSold(48)]);
+  const [settings, available, sold, featuredList] = await Promise.all([getSiteSettings(), getAvailable(48), getSold(48), getFeatured(6)]);
+  const featured = featuredList.filter((v) => v.images.length > 0);
   const wa = normalizeWhatsapp(settings.whatsapp);
   const lead = (available.filter((v) => v.is_featured).length ? available.filter((v) => v.is_featured) : available);
   const collage = lead.slice(0, 3).map((v) => ({ v, img: primaryImage(v) })).filter((c) => c.img);
@@ -64,7 +65,13 @@ export default async function Home() {
         </div>
       </section>
 
-      <Block id="available" n="01" title="Available cars">
+      {featured.length > 0 && (
+        <Block n="01" title="Featured cars">
+          <Grid>{featured.map((v) => <VehicleCard key={v.id} v={v} waNumber={settings.whatsapp} tag="Featured" />)}</Grid>
+        </Block>
+      )}
+
+      <Block id="available" n={featured.length ? "02" : "01"} title="Available cars">
         {available.length ? (
           <Grid>{available.map((v, i) => <VehicleCard key={v.id} v={v} waNumber={settings.whatsapp} priority={i < 3} tag={i < 3 ? "New arrival" : undefined} />)}</Grid>
         ) : (
@@ -73,12 +80,12 @@ export default async function Home() {
       </Block>
 
       {sold.length > 0 && (
-        <Block id="sold" n="02" title="Sold cars">
+        <Block id="sold" n={featured.length ? "03" : "02"} title="Sold cars">
           <Grid>{sold.map((v) => <VehicleCard key={v.id} v={v} waNumber={settings.whatsapp} />)}</Grid>
         </Block>
       )}
 
-      <Block n={sold.length ? "03" : "02"} title="How it works">
+      <Block n={String((featured.length ? 2 : 1) + 1 + (sold.length ? 1 : 0)).padStart(2, "0")} title="How it works">
         <ol className="grid gap-6 md:grid-cols-3">
           {[["Browse", "Look through the available cars and open any car for full details and photos."],
             ["Ask", "Message Skandha Cars on WhatsApp about a specific car. We confirm availability when you ask."],
